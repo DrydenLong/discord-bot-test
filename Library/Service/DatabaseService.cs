@@ -10,7 +10,12 @@ namespace Library.Service
     public interface IDatabaseService
     {
         bool CreateCustomResponse(string command, string response);
+        bool RemoveCustomResponse(string command);
         List<CustomResponse> GetCustomResponses(string command);
+        List<CustomResponse> GetAllCustomResponses();
+        List<User> GetAdmins();
+        bool AddAdmin(int userId, bool superAdmin);
+        bool RemoveAdmin(int userId);
     }
     public class DatabaseService : IDatabaseService
     {
@@ -25,7 +30,7 @@ namespace Library.Service
         {
             try
             {
-                var sql = "DROP TABLE CustomResponses; CREATE TABLE CustomResponses (Command VARCHAR(9999) NOT NULL, Response VARCHAR(9999) NOT NULL); INSERT INTO CustomResponses (Command, Response) VALUES (@Command, @Response);";
+                var sql = "INSERT INTO CustomResponses (Command, Response) VALUES (@Command, @Response);";
                 using (var conn = new NpgsqlConnection(_config.DatabaseConnectionString))
                 {
                     var result = conn.Execute(sql, new { Command = command, Response = response });
@@ -40,6 +45,24 @@ namespace Library.Service
             return false;
         }
 
+        public bool RemoveCustomResponse(string command)
+        {
+            try
+            {
+                var sql = "DELETE FROM CustomResponses WHERE Command = @Command;";
+                using (var conn = new NpgsqlConnection(_config.DatabaseConnectionString))
+                {
+                    var result = conn.Execute(sql, new { Command = command });
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+
+            return false;
+        }
 
         public List<CustomResponse> GetCustomResponses(string command)
         {
@@ -57,6 +80,80 @@ namespace Library.Service
             }
 
             return new List<CustomResponse>();
+        }
+
+        public List<CustomResponse> GetAllCustomResponses()
+        {
+            try
+            {
+                var sql = "SELECT * FROM CustomResponses;";
+                using (var conn = new NpgsqlConnection(_config.DatabaseConnectionString))
+                {
+                    return conn.Query<CustomResponse>(sql).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+
+            return new List<CustomResponse>();
+        }
+
+        public List<User> GetAdmins()
+        {
+            try
+            {
+                var sql = "SELECT * FROM admins;";
+                using (var conn = new NpgsqlConnection(_config.DatabaseConnectionString))
+                {
+                    return conn.Query<User>(sql).ToList();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+
+            return new List<User>();
+        }
+
+        public bool AddAdmin(int userId, bool superAdmin)
+        {
+            try
+            {
+                var sql = "INSERT INTO Admins (UserId, SuperAdmin, Active) VALUES (@UserId, @SuperAdmin, true);";
+                using (var conn = new NpgsqlConnection(_config.DatabaseConnectionString))
+                {
+                    conn.Execute(sql, new { UserId = userId, SuperAdmin = superAdmin });
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+
+            return false;
+        }
+
+        public bool RemoveAdmin(int userId)
+        {
+            try
+            {
+                var sql = "UPDATE Admins SET Active = false WHERE UserId = @UserId";
+                using (var conn = new NpgsqlConnection(_config.DatabaseConnectionString))
+                {
+                    conn.Execute(sql, new { UserId = userId });
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+
+            return false;
         }
     }
 }
