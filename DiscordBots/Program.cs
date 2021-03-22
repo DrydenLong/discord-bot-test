@@ -26,7 +26,17 @@ namespace TheArchitek
 
         public Program()
         {
-            _config = JsonConvert.DeserializeObject<Config>(File.ReadAllText("config.json"));
+            var environment = Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT");
+            if (string.Equals(environment, "PROD"))
+            {
+                _config.Token = Environment.GetEnvironmentVariable("Token");
+                _config.DatabaseConnectionString = Environment.GetEnvironmentVariable("DatabaseConnectionString");
+            }
+            else
+            {
+                _config = JsonConvert.DeserializeObject<Config>(File.ReadAllText("config.json"));
+            }
+
             //setup our DI
             var serviceProvider = new ServiceCollection()
                 .AddScoped<IDatabaseService>(x => new DatabaseService(_config))
