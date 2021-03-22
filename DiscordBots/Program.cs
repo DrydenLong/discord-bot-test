@@ -11,7 +11,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TestBot1
+namespace TheArchitek
 {
     class Program
     {
